@@ -1,0 +1,451 @@
+Brief Guide to Adding Map and Project Features
+
+I'll show you exactly what to add to your existing code to make the map usable and add project management functionality.
+
+1. Add these new styles to your existing CSS:
+
+```css
+/* Add these to your existing styles */
+.project-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.project-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+.map-drawing-tools {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.area-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+.area-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+.area-item:hover {
+    background-color: #f8f9fa;
+    border-left-color: #007bff;
+}
+.area-item.active {
+    background-color: #e9ecef;
+    border-left-color: #0d6efd;
+}
+```
+
+2. Add these modals right before the closing </body> tag:
+
+```html
+<!-- Add these modals before the closing </body> tag -->
+
+<!-- Project Selection Modal -->
+<div class="modal fade" id="projectSelectionModal" tabindex="-1" aria-labelledby="projectSelectionModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="projectSelectionModalLabel">Select Project</h5>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5>Your Projects</h5>
+                    <button type="button" class="btn btn-success" id="createNewProjectBtn">
+                        <i class="bi bi-plus-circle"></i> New Project
+                    </button>
+                </div>
+                
+                <div class="row" id="projectsContainer">
+                    <!-- Projects will be loaded here -->
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Import Project</h5>
+                    <div class="input-group">
+                        <input type="file" class="form-control" id="importProjectFile" accept=".json">
+                        <button class="btn btn-outline-secondary" type="button" id="importProjectBtn">Import</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newProjectModalLabel">Create New Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newProjectForm">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">Project Name *</label>
+                        <input type="text" class="form-control" id="projectName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="projectDescription" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="projectLocation">
+                    </div>
+                    <div class="mb-3">
+                        <label for="projectArea" class="form-label">Area (hectares)</label>
+                        <input type="number" class="form-control" id="projectArea" min="0" step="0.1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveNewProjectBtn">Create Project</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Area Details Modal -->
+<div class="modal fade" id="areaDetailsModal" tabindex="-1" aria-labelledby="areaDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="areaDetailsModalLabel">Area Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="areaDetailsForm">
+                    <div class="mb-3">
+                        <label for="areaName" class="form-label">Area Name *</label>
+                        <input type="text" class="form-control" id="areaName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="areaType" class="form-label">Area Type *</label>
+                        <select class="form-select" id="areaType" required>
+                            <option value="">Select type...</option>
+                            <option value="conservation">Conservation Zone</option>
+                            <option value="restoration">Restoration Area</option>
+                            <option value="monitoring">Monitoring Plot</option>
+                            <option value="research">Research Area</option>
+                            <option value="buffer">Buffer Zone</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="areaDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="areaDescription" rows="3"></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="areaSize" class="form-label">Size (hectares)</label>
+                                <input type="number" class="form-control" id="areaSize" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="areaColor" class="form-label">Display Color</label>
+                                <input type="color" class="form-control form-control-color" id="areaColor" value="#3d8bfd">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger me-auto" id="deleteAreaBtn">Delete</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveAreaDetailsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+3. Update your map container to include drawing tools:
+
+```html
+<!-- Replace your existing map container with this one -->
+<div class="col-md-8">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">Site Map</h5>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-success" id="addAreaBtn">
+                        <i class="bi bi-pencil-square"></i> Define Area
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="manageAreasBtn">
+                        <i class="bi bi-list-ul"></i> Manage Areas
+                    </button>
+                </div>
+            </div>
+            <div class="map-container p-3 position-relative">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <div class="btn-group-vertical">
+                        <button id="zoneToggle" class="btn btn-sm btn-outline-primary active">Zones</button>
+                        <button id="vegetationToggle" class="btn btn-sm btn-outline-success">Vegetation</button>
+                        <button id="weedsToggle" class="btn btn-sm btn-outline-danger">Weeds</button>
+                    </div>
+                </div>
+                <div class="map-drawing-tools" id="drawingTools" style="display: none;">
+                    <div class="btn-group btn-group-sm mb-2">
+                        <button type="button" class="btn btn-outline-primary" id="drawRectangleBtn">
+                            <i class="bi bi-square"></i> Rectangle
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="drawPolygonBtn">
+                            <i class="bi bi-pentagon"></i> Polygon
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" id="drawCircleBtn">
+                            <i class="bi bi-circle"></i> Circle
+                        </button>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-success btn-sm" id="saveAreaBtn">
+                            <i class="bi bi-check-lg"></i> Save Area
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="cancelDrawingBtn">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+4. Add the areas list panel:
+
+```html
+<!-- Add this panel next to your map (in the adjacent column) -->
+<div class="col-md-4">
+    <!-- Areas List Panel -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Managed Areas</h5>
+            <div class="area-list" id="areasList">
+                <!-- Areas will be loaded here -->
+            </div>
+            <button class="btn btn-sm btn-outline-primary mt-3 w-100" id="addNewAreaBtn">
+                <i class="bi bi-plus"></i> Add New Area
+            </button>
+        </div>
+    </div>
+</div>
+```
+
+5. Add these script references before your main script:
+
+```html
+<!-- Add these before your main script tag -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+```
+
+6. Add this project management code at the beginning of your script:
+
+```javascript
+// Add this at the beginning of your script, before your existing code
+const app = {
+    currentProject: null,
+    projects: JSON.parse(localStorage.getItem('ecoProjects')) || {},
+    drawingMode: false,
+    drawnItems: new L.FeatureGroup(),
+    drawControl: null,
+    
+    init: function() {
+        // Initialize the application
+        this.showProjectSelection();
+        this.setupEventListeners();
+        
+        // If there are projects, automatically select the first one
+        const projectKeys = Object.keys(this.projects);
+        if (projectKeys.length > 0) {
+            this.loadProject(projectKeys[0]);
+            bootstrap.Modal.getInstance(document.getElementById('projectSelectionModal')).hide();
+        }
+    },
+    
+    showProjectSelection: function() {
+        const projectsContainer = document.getElementById('projectsContainer');
+        projectsContainer.innerHTML = '';
+        
+        const projectKeys = Object.keys(this.projects);
+        
+        if (projectKeys.length === 0) {
+            projectsContainer.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-folder-x display-1 text-muted"></i>
+                    <p class="mt-3">No projects found. Create your first project to get started.</p>
+                </div>
+            `;
+        } else {
+            projectKeys.forEach(projectId => {
+                const project = this.projects[projectId];
+                const projectCard = document.createElement('div');
+                projectCard.className = 'col-md-6 col-lg-4 mb-3';
+                projectCard.innerHTML = `
+                    <div class="card project-card h-100" data-project-id="${projectId}">
+                        <div class="card-body">
+                            <h5 class="card-title">${project.name}</h5>
+                            <p class="card-text text-muted">${project.description || 'No description'}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${project.areas ? Object.keys(project.areas).length : 0} areas</small>
+                                <small class="text-muted">${this.formatDate(project.createdAt)}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                projectsContainer.appendChild(projectCard);
+            });
+        }
+        
+        // Show the project selection modal
+        new bootstrap.Modal(document.getElementById('projectSelectionModal')).show();
+    },
+    
+    loadProject: function(projectId) {
+        this.currentProject = this.projects[projectId];
+        
+        // Update UI with project info
+        document.getElementById('currentProjectName').textContent = this.currentProject.name;
+        document.getElementById('currentProjectDescription').textContent = this.currentProject.description || '';
+        
+        // Initialize map and other components
+        this.initMap();
+        this.initCharts();
+        this.initCalendar();
+        this.loadAreasList();
+        this.loadDashboard();
+        this.loadAssessments();
+        this.loadSpecies();
+        this.loadActivities();
+        this.loadMonitoring();
+        this.loadReports();
+        this.loadComplianceChecklist();
+        this.loadSettings();
+    },
+    
+    initMap: function() {
+        // Initialize the map with project location if available
+        const defaultCoords = [-33.4000, 150.3000]; // Blue Mountains
+        const coords = this.currentProject.locationCoords || defaultCoords;
+        
+        window.map = L.map('map').setView(coords, 13);
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(window.map);
+        
+        // Initialize drawing controls
+        this.initDrawingTools();
+        
+        // Load project areas if any
+        this.loadProjectAreas();
+    },
+    
+    initDrawingTools: function() {
+        // Remove existing draw control if any
+        if (this.drawControl) {
+            window.map.removeControl(this.drawControl);
+        }
+        
+        // Initialize feature group to store drawn items
+        this.drawnItems = new L.FeatureGroup();
+        window.map.addLayer(this.drawnItems);
+        
+        // Initialize draw control
+        this.drawControl = new L.Control.Draw({
+            position: 'topright',
+            draw: {
+                polygon: {
+                    shapeOptions: {
+                        color: '#3d8bfd'
+                    },
+                    allowIntersection: false,
+                    drawError: {
+                        color: '#dc3545',
+                        message: '<strong>Error:</strong> shape edges cannot cross!'
+                    },
+                    showArea: true,
+                    metric: true
+                },
+                polyline: false,
+                circle: {
+                    shapeOptions: {
+                        color: '#3d8bfd'
+                    }
+                },
+                rectangle: {
+                    shapeOptions: {
+                        color: '#3d8bfd'
+                    }
+                },
+                marker: false,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: this.drawnItems
+            }
+        });
+        
+        // Add draw control to map but hide it initially
+        // We'll show it only when in drawing mode
+        
+        // Event listeners for drawing
+        window.map.on(L.Draw.Event.CREATED, (e) => {
+            const type = e.layerType;
+            const layer = e.layer;
+            
+            // Add style to the drawn layer
+            if (type === 'polygon' || type === 'rectangle') {
+                layer.setStyle({
+                    color: '#3d8bfd',
+                    fillColor: '#3d8bfd',
+                    fillOpacity: 0.2,
+                    weight: 2
+                });
+            } else if (type === 'circle') {
+                layer.setStyle({
+                    color: '#3d8bfd',
+                    fillColor: '#3d8bfd',
+                    fillOpacity: 0.2,
+                    weight: 2
+                });
+            }
+            
+            this.drawnItems.addLayer(layer);
+            
+            // Show the area details modal
+            this.showAreaDetailsModal(layer);
+        });
+    },
+    
+    // ... (additional functions would follow)
+};
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    app.init();
+});
+```
+
+These additions will give you a project management system with map drawing capabilities. The key features include:
+
+1. Creating and managing multiple projects
+2. Drawing and saving areas on the map
+3. Organizing all your data by project
+4. Exporting/importing projects
+
+You'll need to add the rest of the functions for the app object (like saving areas, handling events, etc.), but this gives you the structure to build upon.
