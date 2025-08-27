@@ -1266,20 +1266,165 @@
         // Initialize jsPDF
         window.jsPDF = window.jspdf.jsPDF;
 
+        // Sample data for demonstration
+        const sampleData = {
+            projects: [
+                {
+                    id: "project1",
+                    name: "Wetland Restoration",
+                    code: "WR-2023",
+                    startDate: "2023-03-15",
+                    status: "active",
+                    description: "Restoration of the northern wetland area to improve biodiversity and water quality."
+                },
+                {
+                    id: "project2",
+                    name: "Forest Conservation",
+                    code: "FC-2023",
+                    startDate: "2023-05-10",
+                    status: "active",
+                    description: "Conservation efforts for the old-growth forest area to protect native species."
+                },
+                {
+                    id: "project3",
+                    name: "Riverbank Stabilization",
+                    code: "RS-2023",
+                    startDate: "2023-01-20",
+                    status: "completed",
+                    description: "Stabilization of riverbanks to prevent erosion and improve habitat quality."
+                }
+            ],
+            assessments: [
+                {
+                    id: "assessment1",
+                    date: "2023-06-15",
+                    assessor: "Dr. Jane Smith",
+                    health: "good",
+                    projectId: "project1",
+                    description: "Initial assessment shows good progress with vegetation establishment."
+                },
+                {
+                    id: "assessment2",
+                    date: "2023-07-22",
+                    assessor: "Dr. Robert Johnson",
+                    health: "excellent",
+                    projectId: "project2",
+                    description: "Forest health is excellent with high biodiversity indicators."
+                },
+                {
+                    id: "assessment3",
+                    date: "2023-08-10",
+                    assessor: "Sarah Williams",
+                    health: "fair",
+                    projectId: "project3",
+                    description: "Riverbank stabilization is progressing but needs additional reinforcement in some areas."
+                },
+                {
+                    id: "assessment4",
+                    date: "2023-09-05",
+                    assessor: "Dr. Jane Smith",
+                    health: "excellent",
+                    projectId: "project1",
+                    description: "Wetland showing excellent recovery with new species observed."
+                }
+            ],
+            species: [
+                {
+                    id: "species1",
+                    name: "Blue Flag Iris",
+                    scientificName: "Iris versicolor",
+                    type: "plant",
+                    status: "native",
+                    projectId: "project1",
+                    description: "Native wetland plant with beautiful blue-purple flowers."
+                },
+                {
+                    id: "species2",
+                    name: "Red Maple",
+                    scientificName: "Acer rubrum",
+                    type: "plant",
+                    status: "native",
+                    projectId: "project2",
+                    description: "Native tree species important for forest ecosystem."
+                },
+                {
+                    id: "species3",
+                    name: "Eastern Bluebird",
+                    scientificName: "Sialia sialis",
+                    type: "bird",
+                    status: "native",
+                    projectId: "project2",
+                    description: "Native bird species that indicates healthy forest habitat."
+                },
+                {
+                    id: "species4",
+                    name: "Japanese Knotweed",
+                    scientificName: "Reynoutria japonica",
+                    type: "plant",
+                    status: "weed",
+                    projectId: "project3",
+                    description: "Invasive species that needs to be controlled."
+                }
+            ],
+            maintenance: [
+                {
+                    id: "maint1",
+                    activity: "Weed Removal",
+                    type: "weed-control",
+                    date: "2023-10-15",
+                    priority: "high",
+                    projectId: "project1",
+                    description: "Remove invasive species from the wetland area.",
+                    status: "scheduled"
+                },
+                {
+                    id: "maint2",
+                    activity: "Tree Planting",
+                    type: "revegetation",
+                    date: "2023-09-20",
+                    priority: "medium",
+                    projectId: "project2",
+                    description: "Plant native tree seedlings in the conservation area.",
+                    status: "completed",
+                    completedDate: "2023-09-20"
+                },
+                {
+                    id: "maint3",
+                    activity: "Water Testing",
+                    type: "water-quality",
+                    date: "2023-10-05",
+                    priority: "medium",
+                    projectId: "project1",
+                    description: "Test water quality parameters in the wetland.",
+                    status: "scheduled"
+                },
+                {
+                    id: "maint4",
+                    activity: "Trail Maintenance",
+                    type: "trail-maintenance",
+                    date: "2023-09-25",
+                    priority: "low",
+                    projectId: "project2",
+                    description: "Maintain walking trails in the forest area.",
+                    status: "scheduled"
+                }
+            ]
+        };
+
         // Simple database using localStorage
         const db = {
             init: function() {
-                if (!localStorage.getItem('projects')) {
-                    localStorage.setItem('projects', JSON.stringify([]));
+                if (!localStorage.getItem('projects') || localStorage.getItem('projects') === '[]') {
+                    localStorage.setItem('projects', JSON.stringify(sampleData.projects));
                 }
-                if (!localStorage.getItem('assessments')) {
-                    localStorage.setItem('assessments', JSON.stringify([]));
+                if (!localStorage.getItem('assessments') || localStorage.getItem('assessments') === '[]') {
+                    localStorage.setItem('assessments', JSON.stringify(sampleData.assessments));
                 }
-                if (!localStorage.getItem('species')) {
-                    localStorage.setItem('species', JSON.stringify([]));
+                if (!localStorage.getItem('species') || localStorage.getItem('species') === '[]') {
+                    localStorage.setItem('species', JSON.stringify(sampleData.species));
                 }
-                if (!localStorage.getItem('maintenance')) {
-                    localStorage.setItem('maintenance', JSON.stringify([]));
+                if (!localStorage.getItem('maintenance') || localStorage.getItem('maintenance') === '[]') {
+                    localStorage.setItem('maintenance', JSON.stringify(sampleData.maintenance));
                 }
             },
             
@@ -2112,7 +2257,7 @@
                 if (monthlyData[monthKey]) {
                     monthlyData[monthKey].assessments++;
                 }
-            });
+            }
             
             // Count maintenance by month
             maintenance.forEach(item => {
@@ -2645,11 +2790,11 @@
                     
                     // Show/hide views
                     if (targetView === 'list-view') {
-                        listView.style.display = 'block';
-                        calendarView.style.display = 'none';
+                        listView.classList.add('active');
+                        calendarView.classList.remove('active');
                     } else if (targetView === 'calendar-view') {
-                        listView.style.display = 'none';
-                        calendarView.style.display = 'block';
+                        listView.classList.remove('active');
+                        calendarView.classList.add('active');
                         loadCalendar();
                     }
                 });
@@ -2657,51 +2802,54 @@
         }
 
         // Navigation
-        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                // Update active state
-                document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Show the corresponding section
-                const target = this.getAttribute('data-target');
-                document.querySelectorAll('.content-section').forEach(section => {
-                    section.classList.remove('active');
-                });
-                
-                setTimeout(() => {
-                    document.getElementById(target).classList.add('active');
+        function setupNavigation() {
+            document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
                     
-                    // Load data for the section
-                    if (target === 'dashboard') loadDashboard();
-                    if (target === 'projects') loadProjects();
-                    if (target === 'assessments') loadAssessments();
-                    if (target === 'species') loadSpecies();
-                    if (target === 'maintenance') {
-                        loadMaintenance();
-                        // Reset to list view when navigating to maintenance
-                        document.querySelector('[data-view="list-view"]').click();
-                    }
-                    if (target === 'charts') loadCharts();
-                    if (target === 'data') {
-                        loadDataSummary();
-                        loadProjectSelects();
-                    }
-                }, 50);
-                
-                // Update page title
-                document.title = `${this.querySelector('span').textContent} | EcoManager Pro`;
+                    // Update active state
+                    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show the corresponding section
+                    const target = this.getAttribute('data-target');
+                    document.querySelectorAll('.content-section').forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    setTimeout(() => {
+                        document.getElementById(target).classList.add('active');
+                        
+                        // Load data for the section
+                        if (target === 'dashboard') loadDashboard();
+                        if (target === 'projects') loadProjects();
+                        if (target === 'assessments') loadAssessments();
+                        if (target === 'species') loadSpecies();
+                        if (target === 'maintenance') {
+                            loadMaintenance();
+                            // Reset to list view when navigating to maintenance
+                            document.querySelector('[data-view="list-view"]').click();
+                        }
+                        if (target === 'charts') loadCharts();
+                        if (target === 'data') {
+                            loadDataSummary();
+                            loadProjectSelects();
+                        }
+                    }, 50);
+                    
+                    // Update page title
+                    document.title = `${this.querySelector('span').textContent} | EcoManager Pro`;
+                });
             });
-        });
+        }
 
         // Initialize the application
         function initApp() {
             db.init();
+            setupNavigation();
+            setupViewToggle();
             loadDashboard();
             loadProjectSelects();
-            setupViewToggle();
             loadDataSummary();
             
             // Initialize tooltips
